@@ -49,6 +49,26 @@ def new_session(query: str, wardrobe: dict) -> dict:
 
 # ── planning loop ─────────────────────────────────────────────────────────────
 
+def _parse_query(query: str) -> dict:
+    """Extract the simple fields this unit needs from a thrift search query."""
+    import re
+
+    text = query.strip()
+    max_price = None
+    price_match = re.search(r"\b(?:under|below|max|less than)\s*\$?\s*(\d+(?:\.\d+)?)", text, re.I)
+    if price_match:
+        max_price = float(price_match.group(1))
+        text = text[: price_match.start()] + " " + text[price_match.end() :]
+
+    size = None
+    size_match = re.search(r"\b(?:in\s+)?size\s+([A-Za-z0-9/.\-]+)", text, re.I)
+    if size_match:
+        size = size_match.group(1).upper()
+        text = text[: size_match.start()] + " " + text[size_match.end() :]
+
+    description = re.sub(r"[, ]+", " ", text).strip(" ,")
+    return {"description": description or query.strip(), "size": size, "max_price": max_price}
+
 def run_agent(query: str, wardrobe: dict) -> dict:
     """
     Run the loop once and return the finished session.
@@ -106,9 +126,45 @@ def run_agent(query: str, wardrobe: dict) -> dict:
         than a stack trace. The import is already at the top of this file.
     """
     session = new_session(query, wardrobe)
+    iterations = 0
 
-    # TODO: delete these two lines and build the loop.
-    session["error"] = "The planning loop isn't built yet — see the TODO in agent.py."
+    try:
+        iterations += 1
+        trace.check_iterations(iterations)
+        parsed = _parse_query(query)
+        session["parsed"] = parsed
+
+        iterations += 1
+        trace.check_iterations(iterations)
+        results = search_listings(
+            parsed["description"],
+            size=parsed["size"],
+            max_price=parsed["max_price"],
+        )
+        session["search_results"] = results
+
+        if not results:
+            session["error"] = (
+                "I could not find a matching listing. Try a broader description, "
+                "a different size, or a higher max price."
+            )
+            return session
+
+        session["selected_item"] = results[0]
+
+        iterations += 1
+        trace.check_iterations(iterations)
+        outfit = suggest_outfit(session["selected_item"], session["wardrobe"])
+        session["outfit_suggestion"] = outfit
+
+        iterations += 1
+        trace.check_iterations(iterations)
+        fit_card = create_fit_card(session["outfit_suggestion"], session["selected_item"])
+        session["fit_card"] = fit_card
+
+    except ModelUnavailable as exc:
+        session["error"] = str(exc)
+
     return session
 
 

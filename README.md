@@ -129,24 +129,43 @@ The parsed query goes into `session["parsed"]`, search results go into
 **One full query**
 
 ```
-$ python app.py ask '...'
+$ python app.py ask 'vintage graphic tee under $30, size M'
+
+  Found:    Y2K Baby Tee — Butterfly Print — $18.0 on depop
+
+  Outfit:   Here are two Y2K-inspired outfits featuring your new **lst_002**:
+
+**Outfit 1: Y2K Streetwear**
+Pair the baby tee with your baggy straight-leg dark wash jeans for a classic early 2000s silhouette. Layer the black cropped zip hoodie on top for easy contrast, and finish with chunky white sneakers and the black crossbody bag for an effortless, everyday look.
+
+**Outfit 2: Casual Edge**
+Tuck the butterfly tee into your wide-leg khaki trousers, accented by the brown leather belt to tie the look together. Throw on the vintage black denim jacket for a touch of grunge, and step into chunky white sneakers to keep the outfit fresh, comfortable, and balanced.
+
+  Fit card: Channeling major early 2000s energy with this dreamy butterfly baby tee! It’s giving effortless streetwear and fits like a dream (S/M). Grab it over on my Depop right now for just $18 before someone else snatches it up!
 
 ```
 
 **The three tools, tested one at a time**
 
 ```
-$ python -c "from tools import search_listings; print(search_listings('graphic tee', max_price=30))"
-
+$ python -c "from tools import search_listings; print([(x['id'], x['title'], x['price'], x['size']) for x in search_listings('graphic tee', max_price=30)])"
+[('lst_017', 'Mesh Long-Sleeve Top — Black', 15.0, 'S/M'), ('lst_002', 'Y2K Baby Tee — Butterfly Print', 18.0, 'S/M'), ('lst_033', 'Vintage Band Tee — Faded Grey', 19.0, 'L'), ('lst_006', 'Graphic Tee — 2003 Tour Bootleg Style', 24.0, 'L')]
 ```
 
 ```
-$ python -c "from tools import suggest_outfit; ..."
+$ python -c "from tools import suggest_outfit; from utils.data_loader import get_example_wardrobe, load_listings; print(suggest_outfit(load_listings()[1], get_example_wardrobe()))"
+Here are two Y2K-inspired outfits featuring your new **lst_002**:
 
+**Outfit 1: Y2K Streetwear**
+Pair the baby tee with your baggy straight-leg dark wash jeans for a classic early 2000s silhouette. Layer the black cropped zip hoodie on top for easy contrast, and finish with chunky white sneakers and the black crossbody bag for an effortless, everyday look.
+
+**Outfit 2: Casual Edge**
+Tuck the butterfly tee into your wide-leg khaki trousers, accented by the brown leather belt to tie the look together. Throw on the vintage black denim jacket for a touch of grunge, and step into chunky white sneakers to keep the outfit fresh, comfortable, and balanced.
 ```
 
 ```
-$ python -c "from tools import create_fit_card; ..."
+$ python -c "from tools import create_fit_card; from utils.data_loader import load_listings; print(create_fit_card('Pair it with baggy jeans and white sneakers.', load_listings()[1]))"
+Obsessed with this Y2K baby tee with the cutest butterfly print! I styled it with some baggy jeans and white sneakers for the ultimate casual fit. Grab it now for just $18.0 over on depop before it’s gone!
 
 ```
 
@@ -163,15 +182,15 @@ $ python -c "from tools import create_fit_card; ..."
 
 **Moment 1**
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+- *What I asked for:* I asked AI to help explain the FitFindr assignment and separate it from the previous RAG project.
+- *What came back:* It identified that this is a new Project 2 repo with tools, a planning loop, session state, criteria, and a README submission.
+- *What I changed:* I created a separate FitFindr project folder instead of mixing the work into `ai201-project1`.
 
 **Moment 2**
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+- *What I asked for:* I asked AI to help pressure-test the search and loop design while implementing the tools.
+- *What came back:* It caught the PowerShell `$30` quoting issue and pointed out that weak one-word matches could return unrelated listings.
+- *What I changed:* I used single-quoted app commands, added simple query parsing, ignored filler words in search, and required stronger keyword overlap for multi-word searches.
 
 <!-- ═══════════════════════ UNIT 4 — THE TEST ═══════════════════════
 

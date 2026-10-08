@@ -274,20 +274,46 @@ that produced it:
 **Happy path**
 
 ```
-
+$ python app.py ask 'vintage graphic tee under $30' --trace
+[1] parse_query
+      in:  vintage graphic tee under $30
+      out: dict with keys: description, size, max_price
+[2] search_listings (via MCP)
+      in:  dict with keys: description, size, max_price
+      out: 5 items: Y2K Baby Tee — Butterfly Print, Vintage Band Tee — Faded Grey, Graphic Tee — 2003 Tour Bootleg Style … +2 more
+[3] select_item
+      out: Y2K Baby Tee — Butterfly Print ($18.0, depop)
+[4] suggest_outfit
+      in:  dict with keys: new_item, wardrobe_items
+      out: Here are two Y2K-inspired outfits featuring your new **lst_002**:  **Outfit 1: Y2K Streetwear** Pair the baby …
+[5] create_fit_card
+      in:  dict with keys: outfit, new_item
+      out: Channeling major early 2000s energy with this dreamy butterfly baby tee! It’s giving effortless streetwear and…
 ```
 
 **Empty search**
 
 ```
-
+$ python app.py ask 'designer ballgown size XXS under $5' --trace
+[1] parse_query
+      in:  designer ballgown size XXS under $5
+      out: dict with keys: description, size, max_price
+[2] search_listings (via MCP)
+      in:  dict with keys: description, size, max_price
+      out: [] (empty)
+[3] branch
+      out: I could not find a matching listing. Try a broader description, a different size, or a higher max price.
+      →    empty search, stopping
 ```
 
 **On the MCP move:** <!-- what changed in your code, and whether anything
 behaved differently afterwards. If the rewire didn't work, say exactly where it
 broke — the error text and the last thing that worked. That earns the point in
 full. -->
-
+I moved `search_listings` from a direct Python call to `mcp_client.call_tool`.
+The happy path and empty-search path behaved the same after the move: MCP
+changed the call shape, but the result still came back as the same list of
+listing dictionaries.
 
 
 ---

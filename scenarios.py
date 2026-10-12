@@ -29,13 +29,23 @@ SCENARIOS = [
         "criterion": 2,
     },
     {
-        # A user with nothing saved. One of unit 4's three failure modes.
-        "name": "empty wardrobe",
-        "query": "denim jacket under $50",
-        "wardrobe": "empty",
-        "criterion": None,
+        "name": "selected item id carries into outfit suggestion",
+        "query": "vintage graphic tee under $30",
+        "wardrobe": "example",
+        "criterion": 3,
     },
-    # TODO: add what your criteria 3, 4 and 5 need.
+    {
+        "name": "fit card includes listing details",
+        "query": "vintage graphic tee under $30",
+        "wardrobe": "example",
+        "criterion": 4,
+    },
+    {
+        "name": "price ceiling is respected",
+        "query": "denim jacket under $50",
+        "wardrobe": "example",
+        "criterion": 5,
+    },
     #
     # Set "criterion" to the number in criteria.md that the scenario tests.
     # "criterion": None means a diagnostic run — useful to have, but it isn't

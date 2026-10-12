@@ -395,6 +395,24 @@ not as explicit as the criterion.
 | 4. Fit card includes item, price, and platform | 4 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
 | 5. Search respects the price ceiling | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
 
+**Representative after-run output** from
+`results/run_2026-10-12_0932_after.md` (`run_eval.py::main` and
+`agent.py::run_agent`):
+
+```
+- selected_item: Y2K Baby Tee — Butterfly Print ($18.0, depop)
+Outfit suggestion: Here are two outfits featuring your **lst_002**.
+Fit card: Living out my early 2000s dreams in this adorable Y2K Baby Tee — Butterfly Print! ... Grab this little beauty on my depop right now for just $18.0 before someone else does!
+
+[2] search_listings (via MCP)
+      out: [] (empty)
+[3] branch
+      out: I could not find a matching listing. Try a broader description, a different size, or a higher max price.
+
+- selected_item: Denim Jacket — Light Wash, Cropped ($42.0, poshmark)
+- search_results: 1
+```
+
 **Did it help, and how do I know:**
 
 `results/run_2026-10-12_0932_after.md` records the after run. It again passed

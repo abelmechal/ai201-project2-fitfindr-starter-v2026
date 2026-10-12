@@ -192,6 +192,12 @@ Obsessed with this Y2K baby tee with the cutest butterfly print! I styled it wit
 - *What came back:* It caught the PowerShell `$30` quoting issue and pointed out that weak one-word matches could return unrelated listings.
 - *What I changed:* I used single-quoted app commands, added simple query parsing, ignored filler words in search, and required stronger keyword overlap for multi-word searches.
 
+**Moment 3**
+
+- *What I asked for:* I asked AI to turn the testing brief into a checklist for MCP, failure modes, five-run evaluation, and the one measured improvement.
+- *What came back:* It identified the missing criterion scenarios and recommended recording actual run output rather than treating one successful run as evidence.
+- *What I changed:* I added one scenario per remaining criterion, ran the required before and after evaluations with caching disabled, and recorded the exact handler messages for the three failure modes.
+
 <!-- ═══════════════════════ UNIT 4 — THE TEST ═══════════════════════
 
      Don't fill these in during unit 3.
@@ -212,17 +218,49 @@ Obsessed with this Y2K baby tee with the cutest butterfly print! I styled it wit
 
 | Criterion | Target | Try 1 | Try 2 | Try 3 | Try 4 | Try 5 | Verdict |
 |---|---|---|---|---|---|---|---|
-| 1.  |  |  |  |  |  |  |  |
-| 2.  |  |  |  |  |  |  |  |
-| 3.  |  |  |  |  |  |  |  |
-| 4.  |  |  |  |  |  |  |  |
-| 5.  |  |  |  |  |  |  |  |
+| 1. Matching query completes all three tools | 4 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 2. Impossible query stops before tool 2 | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 3. Selected item id carries into outfit text | 4 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 4. Fit card includes item, price, and platform | 4 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 5. Search respects the price ceiling | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
 
 **Real output from one try**, pasted as text, naming the file and function
 that produced it:
 
 ```
+`results/run_2026-10-12_0929_before.md`, produced by `run_eval.py::main` and
+`agent.py::run_agent`, contains all 25 criterion tries (plus the separate
+empty-wardrobe diagnostic). Representative real output from one try per
+criterion follows.
 
+Criterion 1:
+
+    - stopped early: no
+    - selected_item: Y2K Baby Tee — Butterfly Print ($18.0, depop)
+    - search_results: 5
+    Fit card: Channeling major 2000s energy with this dreamy butterfly baby tee, now up on my depop for just $18!
+
+Criterion 2:
+
+    [2] search_listings (via MCP)
+          out: [] (empty)
+    [3] branch
+          out: I could not find a matching listing. Try a broader description, a different size, or a higher max price.
+          →    empty search, stopping
+
+Criterion 3:
+
+    - selected_item: Y2K Baby Tee — Butterfly Print ($18.0, depop)
+    Outfit suggestion: Embrace a Y2K aesthetic by pairing your **lst_002** butterfly baby tee with the baggy straight-leg dark wash jeans.
+
+Criterion 4:
+
+    Fit card: Obsessed with this Y2K butterfly baby tee and honestly might keep it for myself! It’s up on Depop right now for just $18.0, perfect for styling with baggy denim or edgy cargo pants.
+
+Criterion 5:
+
+    - selected_item: Denim Jacket — Light Wash, Cropped ($42.0, poshmark)
+    - search_results: 1
 ```
 
 ---
@@ -247,14 +285,24 @@ that produced it:
 
 | # | Criterion | Target | Verdict | How I decided |
 |---|---|---|---|---|
-| 1 |  |  |  |  |
-| 2 |  |  |  |  |
-| 3 |  |  |  |  |
-| 4 |  |  |  |  |
-| 5 |  |  |  |  |
+| 1 | Matching query completes all three tools | 4 of 5 | MET (5/5) | Each run reached `create_fit_card` and returned a non-empty fit card. |
+| 2 | Impossible query stops before tool 2 | 5 of 5 | MET (5/5) | Every trace ended after the empty `search_listings` result; no outfit suggestion was present. |
+| 3 | Selected item id carries into outfit text | 4 of 5 | MET (5/5) | The selected id was `lst_002` and each outfit suggestion included `lst_002`. |
+| 4 | Fit card includes item, price, and platform | 4 of 5 | MET (5/5) | Each card named the baby tee, $18/$18.0, and Depop/depop. |
+| 5 | Search respects the price ceiling | 5 of 5 | MET (5/5) | The $50 scenario returned one $42.0 listing on every try; no result exceeded its parsed ceiling. |
 
 **Diagnoses**
 
+There were no missed criteria in the before run, so there is no failure to
+diagnose among the five scored criteria. The likely weak point was criterion 4:
+the old fit-card prompt asked for the right fields but left their exact wording
+to model paraphrase. I chose that as the one improvement target.
+
+I also triggered the required failure modes separately:
+
+- Empty search: “I could not find a matching listing. Try a broader description, a different size, or a higher max price.”
+- Empty wardrobe: “Building your first wardrobe around lst_007 is easy because light-wash denim goes with everything. Here are two practical outfits:” The agent then supplied general styling advice rather than crashing.
+- Model unavailable: “The model rejected your API key. Check GEMINI_API_KEY in your .env file, or create a fresh key at aistudio.google.com.” I tested this with a temporary invalid environment value and restored the normal configuration immediately afterward.
 
 
 ---
@@ -327,19 +375,33 @@ listing dictionaries.
 
 **What I changed:**
 
+I changed only the `create_fit_card` prompt in `tools.py`. Instead of asking
+the model generally to mention the item, price, and platform, it now gives the
+exact title, price, and platform strings and requires each once.
+
 **Which failure it was meant to fix:**
+
+This hardens criterion 4 against a model paraphrase that might omit or alter a
+listing detail. The before run happened to pass, but the prompt contract was
+not as explicit as the criterion.
 
 ### Run Log — After
 
 | Criterion | Target | Try 1 | Try 2 | Try 3 | Try 4 | Try 5 | Verdict |
 |---|---|---|---|---|---|---|---|
-| 1.  |  |  |  |  |  |  |  |
-| 2.  |  |  |  |  |  |  |  |
-| 3.  |  |  |  |  |  |  |  |
-| 4.  |  |  |  |  |  |  |  |
-| 5.  |  |  |  |  |  |  |  |
+| 1. Matching query completes all three tools | 4 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 2. Impossible query stops before tool 2 | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 3. Selected item id carries into outfit text | 4 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 4. Fit card includes item, price, and platform | 4 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 5. Search respects the price ceiling | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
 
 **Did it help, and how do I know:**
+
+`results/run_2026-10-12_0932_after.md` records the after run. It again passed
+criterion 4 in 5/5 tries, and the cards now included the exact listing title,
+price, and platform. The overall numeric score did not increase because the
+before run was already 5/5; this change made the behavior more explicit rather
+than producing a higher count.
 
 <!-- If it made things worse, say that. Honestly reported, that earns full
      credit and is more interesting than one that worked. -->
@@ -349,7 +411,12 @@ listing dictionaries.
 ---
 
 ## What's Still Broken
-
+No scored criterion was missed after the improvement. The remaining limitation
+is that generated caption style still varies, and prompt instructions alone
+cannot guarantee every future model response will comply perfectly. I stopped
+after one prompt change because the assignment requires one measured change;
+the next production step would be a post-generation validator with a retry,
+which would be a separate system change.
 <!-- For each criterion still missed: what you'd do, and why you stopped where
      you did. "I ran out of time" is fine if it's true. Pretending nothing is
      left is not. -->

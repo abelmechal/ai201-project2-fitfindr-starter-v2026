@@ -258,7 +258,9 @@ Outfit idea:
 
 Requirements:
 - 2 to 4 sentences.
-- Mention the item, the price, and the platform exactly once each.
+- Include this exact title once: {new_item['title']}
+- Include this exact price once: ${new_item['price']}
+- Include this exact platform once: {new_item['platform']}
 - Sound like a real caption, not a catalog listing.
 """.strip()
     return generate(prompt)
